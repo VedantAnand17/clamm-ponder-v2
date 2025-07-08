@@ -13,6 +13,20 @@ export interface ChainData {
 }
 
 export const chainData: Record<number, ChainData> = {
+  // Monad testnet
+  41144: {
+    data: {
+      strategies: {
+        // Add your deployed strategy addresses here when available
+        // Using placeholder addresses for now
+        "0x1111000000000000000000000000000000000000": {
+          name: "MONAD ETH-USDC Covered Call",
+          description: "Monad testnet ETH-USDC covered call strategy",
+        },
+      },
+    },
+  },
+  // Keep existing chain configs
   42161: {
     data: {
       strategies: {
@@ -55,7 +69,7 @@ export const chainData: Record<number, ChainData> = {
 export const getSpecificStrategy = (
   chainId?: number,
   address?: string
-): StrategyAddressConfig | null => {
+): StrategyAddressConfig | Record<string, StrategyAddressConfig> | null => {
   // If both chainId and address are provided, return the specific strategy
   if (chainId && address) {
     return chainData[chainId]?.data.strategies?.[address] || null;

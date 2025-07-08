@@ -13,15 +13,13 @@ import { AutoExerciseABI } from "./abis/AutoExerciseABI";
 
 export default createConfig({
   ordering: "multichain",
+  database: {
+    schema: "public",
+  },
   networks: {
-    // arbitrum: {
-    //   chainId: 42161,
-    //   transport: http(process.env.PONDER_RPC_URL_42161),
-    //   maxRequestsPerSecond: 300,
-    // },
-    tenderly: {
-      chainId: 8450,
-      transport: http(process.env.PONDER_RPC_URL_8450),
+    monad: {
+      chainId: 41144, // Monad testnet chain ID
+      transport: http(process.env.PONDER_RPC_URL_MONAD),
       maxRequestsPerSecond: 300,
     },
   },
@@ -50,39 +48,39 @@ export default createConfig({
   contracts: {
     Automatorv21: {
       network: {
-        tenderly: {
+        monad: {
           address: [
-            "0xcC83bfa612270e89d4f635d0D82787636499ba30",
-            "0x882376e99ad0F6dc9B91A7f982e26A5EA1061bF4",
+            // Add your deployed Automator addresses here when available
+            // For now, using placeholder addresses
           ],
-          startBlock: 27488039,
+          startBlock: 25148365, // Using the block number from your deployment
         },
       },
       abi: mergeAbis([Automatorv21ABI, Automatorv11ABI]),
     },
     OptionMarket: {
       network: {
-        tenderly: {
-          address: ["0x1D56d9d8885988cAA4481B4432f9EA1FE29CAEcD"],
-          startBlock: 27488039,
+        monad: {
+          address: ["0x8fCc18a604C85475BE9DF68d6C106a1ca26A73cc"], // DopexV2OptionMarketV2
+          startBlock: 25148365,
         },
       },
       abi: OptionMarketABI,
     },
     PositionManager: {
       network: {
-        tenderly: {
-          address: ["0x8be7bC2FE54fFd5B977725beB72946dDF6b6302A"],
-          startBlock: 27488039,
+        monad: {
+          address: ["0x3cDF18a1249c31d1dc9ac8F2FD5Ba3ECA8761753"], // DopexV2PositionManager
+          startBlock: 25148365,
         },
       },
       abi: PositionManagerABI,
     },
     LiquidityHandler: {
       network: {
-        tenderly: {
-          address: ["0xa1A46BDe565A7f083c8d0a596e8A4fcd5571E9a6"],
-          startBlock: 27488039,
+        monad: {
+          address: ["0x680b4678Aff708535BA641A6Dd36B4dFfbF159E2"], // UniswapV3SingleTickLiquidityHandlerV2
+          startBlock: 25148365,
         },
       },
       abi: LiquidityHandlerABI,
@@ -90,41 +88,45 @@ export default createConfig({
     primePool: {
       abi: UniswapV3PoolABI,
       network: {
-        tenderly: {
-          address: ["0xd0b53D9277642d899DF5C87A3966A349A798F224"],
-          startBlock: 27488039,
+        monad: {
+          address: [
+            0x60a336798063396d8f0f398411bad02a762735c4
+          ],
+          startBlock: 25148365,
         },
       },
     },
     optionPricing: {
       abi: OptionPricingV2ABI,
       network: {
-        tenderly: {
-          address: ["0x1b1ed6018C7ea7703ade42D533450629b7Fa1060"],
-          startBlock: 27488039,
+        monad: {
+          address: ["0xd15A0dfBa2AE002bB35982489e90A466dA0DD5dB"], // OptionPricingV2
+          startBlock: 25148365,
         },
       },
     },
     feeStrategy: {
       abi: FeeStrategyV2ABI,
       network: {
-        tenderly: {
-          address: ["0x0DF5faE5a2F67011B8079B31D17c490618aF853e"],
-          startBlock: 27488039,
+        monad: {
+          address: ["0xFB75d6F7B0F0791ceb19106aCaB593651Db7564a"], // DopexV2ClammFeeStrategyV2
+          startBlock: 25148365,
         },
       },
     },
     AutoExercise: {
       abi: AutoExerciseABI,
       network: {
-        tenderly: {
-          address: ["0xD70f40BEAF7a6920269e337fb58456143197b22E"],
-          startBlock: 27488478,
+        monad: {
+          address: [
+            // Add AutoExercise address here when available
+          ],
+          startBlock: 25148365,
         },
       },
     },
     ERC20: {
-      network: "tenderly",
+      network: "monad",
       abi: erc20ABI,
     },
   },
