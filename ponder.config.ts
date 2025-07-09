@@ -1,6 +1,6 @@
 import { createConfig, mergeAbis, factory } from "ponder";
 import { http, parseAbiItem } from "viem";
-import { Automatorv21ABI } from "./abis/Automatorv21ABI";
+// import { Automatorv21ABI } from "./abis/Automatorv21ABI";
 import { Automatorv11ABI } from "./abis/Automatorv11ABI";
 import { UniswapV3PoolABI } from "./abis/UniswapV3PoolABI";
 import { erc20ABI } from "./abis/erc20ABI";
@@ -15,7 +15,7 @@ export default createConfig({
   ordering: "multichain",
   networks: {
     monad: {
-      chainId: 41144, // Monad testnet chain ID
+      chainId: 10143, // Monad testnet chain ID
       transport: http(process.env.PONDER_RPC_URL_MONAD),
       maxRequestsPerSecond: 300,
     },
@@ -43,18 +43,16 @@ export default createConfig({
   //   },
   // },
   contracts: {
-    Automatorv21: {
-      network: {
-        monad: {
-          address: [
-            // Add your deployed Automator addresses here when available
-            // For now, using placeholder addresses
-          ],
-          startBlock: 25148365, // Using the block number from your deployment
-        },
-      },
-      abi: mergeAbis([Automatorv21ABI, Automatorv11ABI]),
-    },
+    // Automatorv21: {
+    //   network: {
+    //     monad: {
+    //       address: [
+    //       ],
+    //       startBlock: 25148365, // Using the block number from your deployment
+    //     },
+    //   },
+    //   abi: mergeAbis([Automatorv21ABI, Automatorv11ABI]),
+    // },
     OptionMarket: {
       network: {
         monad: {
@@ -112,17 +110,16 @@ export default createConfig({
         },
       },
     },
-    AutoExercise: {
-      abi: AutoExerciseABI,
-      network: {
-        monad: {
-          address: [
-            // Add AutoExercise address here when available
-          ],
-          startBlock: 25148365,
-        },
-      },
-    },
+    // AutoExercise: {
+    //   abi: AutoExerciseABI,
+    //   network: {
+    //     monad: {
+    //       address: [
+    //       ],
+    //       startBlock: 25148365,
+    //     },
+    //   },
+    // },
     ERC20: {
       network: "monad",
       abi: erc20ABI,

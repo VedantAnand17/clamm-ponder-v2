@@ -46,234 +46,234 @@ import { UniswapV3PoolABI } from "../abis/UniswapV3PoolABI";
 import { PublicClient } from "viem";
 import { FeeStrategyV2ABI } from "../abis/FeeStrategyV2ABI";
 
-ponder.on("Automatorv21:Transfer", async ({ event, context }) => {
-  const chainId = Number(context.network.chainId);
+// ponder.on("Automatorv21:Transfer", async ({ event, context }) => {
+//   const chainId = Number(context.network.chainId);
 
-  await context.db
-    .insert(account)
-    .values({
-      address: event.args.from,
-      chainId,
-      balance: 0n,
-      isOwner: false,
-    })
-    .onConflictDoUpdate((row) => ({
-      balance: row.balance - event.args.value,
-    }));
+//   await context.db
+//     .insert(account)
+//     .values({
+//       address: event.args.from,
+//       chainId,
+//       balance: 0n,
+//       isOwner: false,
+//     })
+//     .onConflictDoUpdate((row) => ({
+//       balance: row.balance - event.args.value,
+//     }));
 
-  await context.db
-    .insert(account)
-    .values({
-      address: event.args.to,
-      chainId,
-      balance: 0n,
-      isOwner: false,
-    })
-    .onConflictDoUpdate((row) => ({
-      balance: row.balance + event.args.value,
-    }));
+//   await context.db
+//     .insert(account)
+//     .values({
+//       address: event.args.to,
+//       chainId,
+//       balance: 0n,
+//       isOwner: false,
+//     })
+//     .onConflictDoUpdate((row) => ({
+//       balance: row.balance + event.args.value,
+//     }));
 
-  await context.db.insert(transferEvent).values({
-    id: event.log.id,
-    chainId,
-    value: event.args.value,
-    timestamp: Number(event.block.timestamp),
-    from: event.args.from,
-    to: event.args.to,
-  });
-});
+//   await context.db.insert(transferEvent).values({
+//     id: event.log.id,
+//     chainId,
+//     value: event.args.value,
+//     timestamp: Number(event.block.timestamp),
+//     from: event.args.from,
+//     to: event.args.to,
+//   });
+// });
 
-ponder.on("Automatorv21:Approval", async ({ event, context }) => {
-  const chainId = Number(context.network.chainId);
+// ponder.on("Automatorv21:Approval", async ({ event, context }) => {
+//   const chainId = Number(context.network.chainId);
 
-  await context.db
-    .insert(allowance)
-    .values({
-      spender: event.args.spender,
-      owner: event.args.owner,
-      chainId,
-      value: event.args.value,
-    })
-    .onConflictDoUpdate({ value: event.args.value });
+//   await context.db
+//     .insert(allowance)
+//     .values({
+//       spender: event.args.spender,
+//       owner: event.args.owner,
+//       chainId,
+//       value: event.args.value,
+//     })
+//     .onConflictDoUpdate({ value: event.args.value });
 
-  await context.db.insert(approvalEvent).values({
-    id: event.log.id,
-    chainId,
-    value: event.args.value,
-    timestamp: Number(event.block.timestamp),
-    owner: event.args.owner,
-    spender: event.args.spender,
-  });
-});
+//   await context.db.insert(approvalEvent).values({
+//     id: event.log.id,
+//     chainId,
+//     value: event.args.value,
+//     timestamp: Number(event.block.timestamp),
+//     owner: event.args.owner,
+//     spender: event.args.spender,
+//   });
+// });
 
-ponder.on("Automatorv21:Rebalance", async ({ event, context }) => {
-  const chainId = Number(context.network.chainId);
+// ponder.on("Automatorv21:Rebalance", async ({ event, context }) => {
+//   const chainId = Number(context.network.chainId);
 
-  const strategy_data = await context.db.find(strategy, {
-    address: event.log.address,
-    chainId,
-  });
+//   const strategy_data = await context.db.find(strategy, {
+//     address: event.log.address,
+//     chainId,
+//   });
 
-  if (!strategy_data) {
-    throw new Error(`Strategy not found: ${event.log.address}`);
-  }
+//   if (!strategy_data) {
+//     throw new Error(`Strategy not found: ${event.log.address}`);
+//   }
 
-  const balancesAfter = await getStrategyBalance(
-    context.client as PublicClient,
-    event.log.address,
-    { asset: strategy_data.asset, counter: strategy_data.counter },
-    { blockNumber: event.block.number }
-  );
+//   const balancesAfter = await getStrategyBalance(
+//     context.client as PublicClient,
+//     event.log.address,
+//     { asset: strategy_data.asset, counter: strategy_data.counter },
+//     { blockNumber: event.block.number }
+//   );
 
-  await context.db.insert(rebalanceEvent).values({
-    id: event.log.id,
-    chainId,
-    strategy: event.log.address,
-    timestamp: Number(event.block.timestamp),
-    current_tick: Number(1111),
-    strategist: event.args.sender,
-    ticks_burn: replaceBigInts(event.args.ticksBurn, String),
-    ticks_mint: replaceBigInts(event.args.ticksMint, String),
-    asset_balance_after: balancesAfter.asset_balance,
-    counter_balance_after: balancesAfter.counter_balance,
-  });
-});
+//   await context.db.insert(rebalanceEvent).values({
+//     id: event.log.id,
+//     chainId,
+//     strategy: event.log.address,
+//     timestamp: Number(event.block.timestamp),
+//     current_tick: Number(1111),
+//     strategist: event.args.sender,
+//     ticks_burn: replaceBigInts(event.args.ticksBurn, String),
+//     ticks_mint: replaceBigInts(event.args.ticksMint, String),
+//     asset_balance_after: balancesAfter.asset_balance,
+//     counter_balance_after: balancesAfter.counter_balance,
+//   });
+// });
 
-ponder.on("Automatorv21:DepositCapSet", async ({ event, context }) => {
-  const chainId = Number(context.network.chainId);
+// ponder.on("Automatorv21:DepositCapSet", async ({ event, context }) => {
+//   const chainId = Number(context.network.chainId);
 
-  await context.db.insert(depositCapEvent).values({
-    id: event.log.id,
-    chainId,
-    strategy: event.log.address,
-    timestamp: Number(event.block.timestamp),
-    owner: event.transaction.from,
-    deposit_cap: event.args.depositCap,
-  });
+//   await context.db.insert(depositCapEvent).values({
+//     id: event.log.id,
+//     chainId,
+//     strategy: event.log.address,
+//     timestamp: Number(event.block.timestamp),
+//     owner: event.transaction.from,
+//     deposit_cap: event.args.depositCap,
+//   });
 
-  await context.db
-    .insert(owner)
-    .values({
-      address: event.transaction.from,
-      chainId,
-    })
-    .onConflictDoUpdate({ address: event.transaction.from });
+//   await context.db
+//     .insert(owner)
+//     .values({
+//       address: event.transaction.from,
+//       chainId,
+//     })
+//     .onConflictDoUpdate({ address: event.transaction.from });
 
-  const strategyData = await initialiseStrategyData(
-    context.client as PublicClient,
-    event.log.address,
-    context.contracts.Automatorv21.abi
-  );
+//   const strategyData = await initialiseStrategyData(
+//     context.client as PublicClient,
+//     event.log.address,
+//     context.contracts.Automatorv21.abi
+//   );
 
-  await context.db
-    .insert(strategy)
-    .values({
-      address: event.log.address,
-      chainId,
-      owner: event.transaction.from,
-      ...strategyData,
-    })
-    .onConflictDoUpdate({ owner: event.transaction.from });
-});
+//   await context.db
+//     .insert(strategy)
+//     .values({
+//       address: event.log.address,
+//       chainId,
+//       owner: event.transaction.from,
+//       ...strategyData,
+//     })
+//     .onConflictDoUpdate({ owner: event.transaction.from });
+// });
 
-ponder.on("Automatorv21:SetDepositCap", async ({ event, context }) => {
-  const chainId = Number(context.network.chainId);
+// ponder.on("Automatorv21:SetDepositCap", async ({ event, context }) => {
+//   const chainId = Number(context.network.chainId);
 
-  await context.db.insert(depositCapEvent).values({
-    id: event.log.id,
-    chainId,
-    strategy: event.log.address,
-    timestamp: Number(event.block.timestamp),
-    owner: event.transaction.from,
-    deposit_cap: event.args.depositCap,
-  });
+//   await context.db.insert(depositCapEvent).values({
+//     id: event.log.id,
+//     chainId,
+//     strategy: event.log.address,
+//     timestamp: Number(event.block.timestamp),
+//     owner: event.transaction.from,
+//     deposit_cap: event.args.depositCap,
+//   });
 
-  await context.db
-    .insert(owner)
-    .values({
-      address: event.transaction.from,
-      chainId,
-    })
-    .onConflictDoUpdate((row) => ({
-      address: event.transaction.from,
-    }));
+//   await context.db
+//     .insert(owner)
+//     .values({
+//       address: event.transaction.from,
+//       chainId,
+//     })
+//     .onConflictDoUpdate((row) => ({
+//       address: event.transaction.from,
+//     }));
 
-  await context.db
-    .insert(strategy)
-    .values({
-      address: event.log.address,
-      chainId,
-      owner: event.transaction.from,
-    })
-    .onConflictDoUpdate((row) => ({
-      owner: event.transaction.from,
-    }));
-});
+//   await context.db
+//     .insert(strategy)
+//     .values({
+//       address: event.log.address,
+//       chainId,
+//       owner: event.transaction.from,
+//     })
+//     .onConflictDoUpdate((row) => ({
+//       owner: event.transaction.from,
+//     }));
+// });
 
-ponder.on("Automatorv21:SetOwner", async ({ event, context }) => {
-  const chainId = Number(context.network.chainId);
+// ponder.on("Automatorv21:SetOwner", async ({ event, context }) => {
+//   const chainId = Number(context.network.chainId);
 
-  await context.db.insert(setOwnerEvents).values({
-    id: event.log.id,
-    chainId,
-    strategy: event.log.address,
-    caller: event.transaction.from,
-    owner: event.args.user,
-    approved: event.args.approved,
-    timestamp: Number(event.block.timestamp),
-  });
+//   await context.db.insert(setOwnerEvents).values({
+//     id: event.log.id,
+//     chainId,
+//     strategy: event.log.address,
+//     caller: event.transaction.from,
+//     owner: event.args.user,
+//     approved: event.args.approved,
+//     timestamp: Number(event.block.timestamp),
+//   });
 
-  if (event.args.approved) {
-    await context.db
-      .insert(owner)
-      .values({
-        address: event.args.user,
-        chainId,
-      })
-      .onConflictDoUpdate((row) => ({
-        address: event.args.user,
-      }));
+//   if (event.args.approved) {
+//     await context.db
+//       .insert(owner)
+//       .values({
+//         address: event.args.user,
+//         chainId,
+//       })
+//       .onConflictDoUpdate((row) => ({
+//         address: event.args.user,
+//       }));
 
-    await context.db
-      .insert(strategy)
-      .values({
-        address: event.log.address,
-        chainId,
-        owner: event.args.user,
-      })
-      .onConflictDoUpdate((row) => ({
-        owner: event.args.user,
-      }));
-  }
-});
+//     await context.db
+//       .insert(strategy)
+//       .values({
+//         address: event.log.address,
+//         chainId,
+//         owner: event.args.user,
+//       })
+//       .onConflictDoUpdate((row) => ({
+//         owner: event.args.user,
+//       }));
+//   }
+// });
 
-ponder.on("Automatorv21:Deposit", async ({ event, context }) => {
-  const chainId = Number(context.network.chainId);
+// ponder.on("Automatorv21:Deposit", async ({ event, context }) => {
+//   const chainId = Number(context.network.chainId);
 
-  await context.db.insert(depositEvent).values({
-    id: event.log.id,
-    chainId,
-    strategy: event.log.address,
-    user: event.args.sender,
-    amount: event.args.assets,
-    shares: event.args.sharesMinted,
-    timestamp: Number(event.block.timestamp),
-  });
-});
+//   await context.db.insert(depositEvent).values({
+//     id: event.log.id,
+//     chainId,
+//     strategy: event.log.address,
+//     user: event.args.sender,
+//     amount: event.args.assets,
+//     shares: event.args.sharesMinted,
+//     timestamp: Number(event.block.timestamp),
+//   });
+// });
 
-ponder.on("Automatorv21:Redeem", async ({ event, context }) => {
-  const chainId = Number(context.network.chainId);
+// ponder.on("Automatorv21:Redeem", async ({ event, context }) => {
+//   const chainId = Number(context.network.chainId);
 
-  await context.db.insert(redeemEvent).values({
-    id: event.log.id,
-    chainId,
-    strategy: event.log.address,
-    user: event.args.sender,
-    amount: event.args.assetsWithdrawn,
-    shares: event.args.shares,
-    timestamp: Number(event.block.timestamp),
-  });
-});
+//   await context.db.insert(redeemEvent).values({
+//     id: event.log.id,
+//     chainId,
+//     strategy: event.log.address,
+//     user: event.args.sender,
+//     amount: event.args.assetsWithdrawn,
+//     shares: event.args.shares,
+//     timestamp: Number(event.block.timestamp),
+//   });
+// });
 
 // option market
 

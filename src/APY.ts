@@ -9,7 +9,7 @@ import schema, {
 import { Automatorv11ABI } from "../abis/Automatorv11ABI";
 import { client, graphql, eq, and, lt, gt } from "ponder";
 import * as fs from "fs/promises";
-import { Automatorv21ABI } from "../abis/Automatorv21ABI";
+// import { Automatorv21ABI } from "../abis/Automatorv21ABI";
 import { VaultInspectorV2ABI } from "../abis/VaultInspectorV2";
 
 // ponder.on("AutomatorAssets:block", async ({ event, context }) => {
