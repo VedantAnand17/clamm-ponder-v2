@@ -13,9 +13,6 @@ import { AutoExerciseABI } from "./abis/AutoExerciseABI";
 
 export default createConfig({
   ordering: "multichain",
-  database: {
-    schema: "public",
-  },
   networks: {
     monad: {
       chainId: 41144, // Monad testnet chain ID
@@ -90,7 +87,7 @@ export default createConfig({
       network: {
         monad: {
           address: [
-            0x60a336798063396d8f0f398411bad02a762735c4
+            "0x60a336798063396d8f0f398411bad02a762735c4"
           ],
           startBlock: 25148365,
         },
