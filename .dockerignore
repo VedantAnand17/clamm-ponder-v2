@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.ponder
+.env
+.env.local
+.env.*.local
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+railway.toml
+nixpacks.toml
+pnpm-lock.yaml 

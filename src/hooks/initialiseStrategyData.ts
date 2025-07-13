@@ -1,57 +1,65 @@
 import { type Address, type PublicClient } from "viem";
-import { type Contract } from "ponder";
 
 export async function initialiseStrategyData(
   client: PublicClient,
   address: Address,
-  contractAbi: Contract['abi']
+  contractAbi: any // Assuming contractAbi is the ABI of the contract
 ) {
   const results = await client.multicall({
     contracts: [
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'pool',
+        args: [],
       },
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'router',
+        args: [],
       },
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'poolTickSpacing',
+        args: [],
       },
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'balancer',
+        args: [],
       },
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'asset',
+        args: [],
       },
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'counterAsset',
+        args: [],
       },
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'depositFeePips',
+        args: [],
       },
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'manager',
+        args: [],
       },
       {
         abi: contractAbi,
-        address: address,
+        address,
         functionName: 'handler',
+        args: [],
       },
     ],
     allowFailure: true

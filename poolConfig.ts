@@ -15,7 +15,24 @@ export interface PoolConfig {
   }
   
   export const POOL_CONFIGS: Record<string, PoolConfig> = {
-"ARBITRUM_WETH_USDC": {
+    // Monad configurations
+    "MONAD_WETH_USDC": {
+      address: "0x60a336798063396d8f0f398411bad02a762735c4", // Add your actual pool address
+      chainId: 10143, // Monad testnet chain ID
+      isToken1Volatile: false,
+      token0: {
+        address: "0xcf5a6076cfa32686c0df13abada2b40dec133f1d", // Update with Monad WETH address
+        decimals: 18,
+        symbol: "WBTC"
+      },
+      token1: {
+        address: "0xf817257fed379853cde0fa4f97ab987181b1e5ea", // Update with Monad USDC address
+        decimals: 6,
+        symbol: "USDC"
+      }
+    },
+    // Keep existing Arbitrum configs for reference
+    "ARBITRUM_WETH_USDC": {
       address: "0xc6962004f452be9203591991d15f6b388e09e8d0",
       chainId: 42161, // Arbitrum One
       isToken1Volatile: false, // is WETH token1?

@@ -441,14 +441,7 @@ export const erc721_token_relations = relations(erc721_token, ({ one }) => ({
 export const erc721_token_to_internal_options = relations(
   erc721_token,
   ({ many }) => ({
-    internal_options: many(internal_options, {
-      references: [
-        internal_options.tokenId,
-        internal_options.optionMarket,
-        internal_options.chainId,
-      ],
-      fields: [erc721_token.id, erc721_token.market, erc721_token.chainId],
-    }),
+    internal_options: many(internal_options),
   })
 );
 
@@ -456,14 +449,7 @@ export const erc721_token_to_internal_options = relations(
 export const internal_options_to_token = relations(
   internal_options,
   ({ one }) => ({
-    token: one(erc721_token, {
-      references: [erc721_token.id, erc721_token.market, erc721_token.chainId],
-      fields: [
-        internal_options.tokenId,
-        internal_options.optionMarket,
-        internal_options.chainId,
-      ],
-    }),
+    token: one(erc721_token),
   })
 );
 
@@ -969,26 +955,26 @@ export const feeStrategyToOptionMarketRelation_feeStrategy = relations(
   })
 );
 
-export const autoExerciseEvents = onchainTable(
-  "autoExerciseEvents",
-  (t) => ({
-    chainId: t.integer().notNull(),
-    autoExercise: t.hex().notNull(),
-    optionMarket: t.hex().notNull(),
-    tokenId: t.bigint().notNull(),
-    owner: t.hex().notNull(),
-    timestamp: t.integer(),
-    asset: t.hex().notNull(),
-    amount: t.bigint().notNull(),
-  }),
-  (table) => ({
-    pk: primaryKey({
-      columns: [
-        table.chainId,
-        table.autoExercise,
-        table.optionMarket,
-        table.tokenId,
-      ],
-    }),
-  })
-);
+// export const autoExerciseEvents = onchainTable(
+//   "autoExerciseEvents",
+//   (t) => ({
+//     chainId: t.integer().notNull(),
+//     autoExercise: t.hex().notNull(),
+//     optionMarket: t.hex().notNull(),
+//     tokenId: t.bigint().notNull(),
+//     owner: t.hex().notNull(),
+//     timestamp: t.integer(),
+//     asset: t.hex().notNull(),
+//     amount: t.bigint().notNull(),
+//   }),
+//   (table) => ({
+//     pk: primaryKey({
+//       columns: [
+//         table.chainId,
+//         table.autoExercise,
+//         table.optionMarket,
+//         table.tokenId,
+//       ],
+//     }),
+//   })
+// );

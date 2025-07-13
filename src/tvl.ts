@@ -4,7 +4,6 @@ import schema, {
   automatorAPY,
   automatorAssets,
   optionMarketTotals,
-  poolTVLandOpenInterest,
   user_liquidity_position,
 } from "ponder:schema";
 

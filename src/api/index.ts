@@ -274,9 +274,7 @@ app.get("/expired-options", async (c) => {
 });
 
 app.get("/get-strategy", async (c) => {
-  const chainId = c.req.query("chainId")
-    ? parseInt(c.req.query("chainId"))
-    : undefined;
+  const chainId = c.req.query("chainId") ? parseInt(c.req.query("chainId") as string) : undefined;
   const address = c.req.query("address") as string | undefined;
 
   // Select fields for strategy queries
@@ -307,22 +305,31 @@ app.get("/get-strategy", async (c) => {
     }
 
     // Build database query based on provided parameters
-    let dbQuery = db.select(strategyFields).from(schema.strategy);
+    let dbStrategies;
 
     if (chainId && address) {
-      dbQuery = dbQuery.where(
-        and(
-          eq(schema.strategy.chainId, chainId),
-          eq(schema.strategy.address, address)
-        )
-      );
+      dbStrategies = await db
+        .select(strategyFields)
+        .from(schema.strategy)
+        .where(
+          and(
+            eq(schema.strategy.chainId, chainId),
+            eq(schema.strategy.address, address as `0x${string}`)
+          )
+        );
     } else if (chainId) {
-      dbQuery = dbQuery.where(eq(schema.strategy.chainId, chainId));
+      dbStrategies = await db
+        .select(strategyFields)
+        .from(schema.strategy)
+        .where(eq(schema.strategy.chainId, chainId));
     } else if (address) {
-      dbQuery = dbQuery.where(eq(schema.strategy.address, address));
+      dbStrategies = await db
+        .select(strategyFields)
+        .from(schema.strategy)
+        .where(eq(schema.strategy.address, address as `0x${string}`));
+    } else {
+      dbStrategies = await db.select(strategyFields).from(schema.strategy);
     }
-
-    const dbStrategies = await dbQuery;
 
     // If no matching strategies in database, return 404
     if (dbStrategies.length === 0) {
@@ -369,15 +376,17 @@ app.get("/get-strategy", async (c) => {
     deposit_fee_pips: strategy.deposit_fee_pips?.toString(),
   }));
 
-  // Create a map of database strategies by chainId and address
-  const dbStrategyMap: Record<number, Record<string, any>> = {};
+      // Create a map of database strategies by chainId and address
+    const dbStrategyMap: Record<number, Record<string, any>> = {};
 
-  for (const strategy of serializedDbStrategies) {
-    if (!dbStrategyMap[strategy.chainId]) {
-      dbStrategyMap[strategy.chainId] = {};
+    for (const strategy of serializedDbStrategies) {
+      if (strategy.address && strategy.chainId) {
+        if (!dbStrategyMap[strategy.chainId]) {
+          dbStrategyMap[strategy.chainId] = {};
+        }
+        dbStrategyMap[strategy.chainId]![strategy.address] = strategy;
+      }
     }
-    dbStrategyMap[strategy.chainId][strategy.address] = strategy;
-  }
 
   // Combine strategy configs with database data, only including strategies that exist in both
   const combinedStrategies: any[] = [];
@@ -411,7 +420,7 @@ app.get("/pool-liquidity/:poolAddress", async (c) => {
 
   try {
     // Validate the pool address format
-    const formattedPoolAddress = getAddress(poolAddress);
+    const formattedPoolAddress = getAddress(poolAddress as string);
 
     // Get liquidity data using the getLiquidityByTickRanges function
     const liquidityData = await getLiquidityByTickRanges(formattedPoolAddress);
@@ -590,7 +599,7 @@ app.get("/get-market/:address", async (c) => {
     const marketWithPricing = market[0]
       ? {
           ...market[0],
-          ttlIV: pricingData.length > 0 ? pricingData[0].ttlIV : null,
+          ttlIV: pricingData.length > 0 ? pricingData[0]?.ttlIV : null,
         }
       : null;
 
@@ -612,7 +621,7 @@ app.get("/get-market/:address", async (c) => {
 });
 
 // Helper function to safely convert JSBI to number
-function jsbiToNumber(jsbiValue) {
+function jsbiToNumber(jsbiValue: any) {
   try {
     // Use toNumber() method for JSBI instances
     if (jsbiValue && typeof jsbiValue.toNumber === "function") {
@@ -628,9 +637,7 @@ function jsbiToNumber(jsbiValue) {
 
 app.get("/get-positions", async (c) => {
   const address = c.req.query("address");
-  const chainId = c.req.query("chainId")
-    ? parseInt(c.req.query("chainId"))
-    : undefined;
+  const chainId = c.req.query("chainId") ? parseInt(c.req.query("chainId") as string) : undefined;
 
   // Get the API URL from environment variables
   const ratesApiUrl = process.env.RATES_API_URL;
@@ -859,13 +866,15 @@ app.get("/get-positions", async (c) => {
     );
 
     // Helper function to fetch value with timeout
-    const fetchWithTimeout = async (payload) => {
+    const fetchWithTimeout = async (payload: any) => {
       // Create an abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), apiTimeout);
 
       try {
-        const response = await fetch(ratesApiUrl, {
+        const urlToFetch = typeof ratesApiUrl === 'string' ? ratesApiUrl : '';
+        if (!urlToFetch) throw new Error('ratesApiUrl is not defined');
+        const response = await fetch(urlToFetch, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -880,7 +889,7 @@ app.get("/get-positions", async (c) => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data = await response.json() as any;
         return {
           tokenId: payload.tokenId,
           market: payload.market,
@@ -895,7 +904,7 @@ app.get("/get-positions", async (c) => {
         );
 
         // Check if it's a timeout error
-        if (error.name === "AbortError") {
+        if (error instanceof Error && error.name === "AbortError") {
           console.error(`Request timed out after ${apiTimeout}ms`);
         }
 
@@ -947,6 +956,7 @@ app.get("/get-positions", async (c) => {
     const exerciseParamsByToken = new Map<string, any>();
 
     for (const result of valueResults) {
+      if (!result) continue;
       const key = `${result.tokenId}-${result.market}`;
       valueByToken.set(key, result.value);
       exerciseParamsByToken.set(key, result.exerciseParams);
