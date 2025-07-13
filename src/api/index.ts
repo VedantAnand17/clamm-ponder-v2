@@ -6,6 +6,7 @@ import { getAddress } from "viem";
 import { getSpecificStrategy, getAllStrategies } from "../../strategies";
 import JSBI from "jsbi";
 import { TickMath, SqrtPriceMath } from "@uniswap/v3-sdk";
+import { count } from "drizzle-orm";
 
 const app = new Hono();
 
@@ -135,7 +136,7 @@ app.get("/indexing-details", async (c) => {
       .select({
         market: schema.erc721_token.market,
         chainId: schema.erc721_token.chainId,
-        tokenCount: db.fn.count()
+        tokenCount: count()
       })
       .from(schema.erc721_token)
       .groupBy(schema.erc721_token.market, schema.erc721_token.chainId);
@@ -159,7 +160,7 @@ app.get("/indexing-details", async (c) => {
     const recentEventsByDate = await db
       .select({
         date: schema.mintOptionEvent.timestamp,
-        count: db.fn.count(schema.mintOptionEvent.id)
+        count: count()
       })
       .from(schema.mintOptionEvent)
       .where(gt(schema.mintOptionEvent.timestamp, sevenDaysAgo))
@@ -295,121 +296,6 @@ app.get("/market-status/:address", async (c) => {
     return c.json(
       {
         error: "Failed to fetch market status",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      500
-    );
-  }
-});
-
-app.get("/indexing-blocks", async (c) => {
-  try {
-    // Get the latest block from various event tables to understand indexing progress
-    const [
-      latestMintBlock,
-      latestTransferBlock,
-      latestSettleBlock,
-      latestExerciseBlock,
-      latestMarketInitBlock
-    ] = await Promise.all([
-      db
-        .select({
-          blockNumber: schema.mintOptionEvent.blockNumber,
-          timestamp: schema.mintOptionEvent.timestamp
-        })
-        .from(schema.mintOptionEvent)
-        .orderBy(desc(schema.mintOptionEvent.blockNumber))
-        .limit(1),
-      
-      db
-        .select({
-          blockNumber: schema.erc721TransferEvent.blockNumber,
-          timestamp: schema.erc721TransferEvent.timestamp
-        })
-        .from(schema.erc721TransferEvent)
-        .orderBy(desc(schema.erc721TransferEvent.blockNumber))
-        .limit(1),
-      
-      db
-        .select({
-          blockNumber: schema.settleOptionEvent.blockNumber,
-          timestamp: schema.settleOptionEvent.timestamp
-        })
-        .from(schema.settleOptionEvent)
-        .orderBy(desc(schema.settleOptionEvent.blockNumber))
-        .limit(1),
-      
-      db
-        .select({
-          blockNumber: schema.exerciseOptionEvent.blockNumber,
-          timestamp: schema.exerciseOptionEvent.timestamp
-        })
-        .from(schema.exerciseOptionEvent)
-        .orderBy(desc(schema.exerciseOptionEvent.blockNumber))
-        .limit(1),
-      
-      db
-        .select({
-          blockNumber: schema.option_markets.blockNumber,
-          timestamp: schema.option_markets.createdAt
-        })
-        .from(schema.option_markets)
-        .orderBy(desc(schema.option_markets.blockNumber))
-        .limit(1)
-    ]);
-
-    // Get current timestamp for comparison
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-
-    // Find the latest block across all event types
-    const allBlocks = [
-      latestMintBlock[0]?.blockNumber,
-      latestTransferBlock[0]?.blockNumber,
-      latestSettleBlock[0]?.blockNumber,
-      latestExerciseBlock[0]?.blockNumber,
-      latestMarketInitBlock[0]?.blockNumber
-    ].filter(Boolean);
-
-    const latestBlock = allBlocks.length > 0 ? Math.max(...allBlocks) : null;
-
-    // Get block distribution (how many events per block range)
-    const blockRanges = await db
-      .select({
-        blockRange: db.fn.floor(schema.mintOptionEvent.blockNumber / 1000).as('blockRange'),
-        count: db.fn.count(schema.mintOptionEvent.id)
-      })
-      .from(schema.mintOptionEvent)
-      .groupBy(db.fn.floor(schema.mintOptionEvent.blockNumber / 1000))
-      .orderBy(desc(db.fn.floor(schema.mintOptionEvent.blockNumber / 1000)))
-      .limit(10);
-
-    return c.json({
-      status: "indexing_blocks_status",
-      timestamp: new Date().toISOString(),
-      currentTimestamp,
-      latestBlock,
-      latestBlocksByEventType: {
-        mintEvents: latestMintBlock[0] || null,
-        transferEvents: latestTransferBlock[0] || null,
-        settleEvents: latestSettleBlock[0] || null,
-        exerciseEvents: latestExerciseBlock[0] || null,
-        marketInitEvents: latestMarketInitBlock[0] || null
-      },
-      blockDistribution: blockRanges,
-      indexingProgress: {
-        hasIndexedData: allBlocks.length > 0,
-        totalEventTypes: allBlocks.length,
-        latestBlockNumber: latestBlock,
-        message: latestBlock 
-          ? `Indexed up to block ${latestBlock}` 
-          : "No blocks indexed yet"
-      }
-    });
-  } catch (error) {
-    console.error("Error in indexing-blocks endpoint:", error);
-    return c.json(
-      {
-        error: "Failed to fetch indexing block information",
         message: error instanceof Error ? error.message : String(error),
       },
       500
