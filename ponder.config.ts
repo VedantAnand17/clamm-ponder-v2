@@ -60,7 +60,7 @@ export default createConfig({
             "0x8fCc18a604C85475BE9DF68d6C106a1ca26A73cc", // DopexV2OptionMarketV2
             "0x1D56d9d8885988cAA4481B4432f9EA1FE29CAEcD"  // Additional OptionMarket
           ],
-          startBlock: 1, // Set to earliest block
+          startBlock: 25048365, // Use deployment block
         },
       },
       abi: OptionMarketABI,
@@ -69,7 +69,7 @@ export default createConfig({
       network: {
         monad: {
           address: ["0x3cDF18a1249c31d1dc9ac8F2FD5Ba3ECA8761753"], // DopexV2PositionManager
-          startBlock: 1, // Set to earliest block
+          startBlock: 25048365, // Use deployment block
         },
       },
       abi: PositionManagerABI,
@@ -78,7 +78,7 @@ export default createConfig({
       network: {
         monad: {
           address: ["0x680b4678Aff708535BA641A6Dd36B4dFfbF159E2"], // UniswapV3SingleTickLiquidityHandlerV2
-          startBlock: 1, // Set to earliest block
+          startBlock: 25148365, // Use deployment block
         },
       },
       abi: LiquidityHandlerABI,
@@ -90,7 +90,7 @@ export default createConfig({
           address: [
 "0x60a336798063396d8f0f398411bad02a762735c4"
           ],
-          startBlock: 1, // Set to earliest block
+          startBlock: 25148365, // Use deployment block
         },
       },
     },
@@ -99,7 +99,7 @@ export default createConfig({
       network: {
         monad: {
           address: ["0xd15A0dfBa2AE002bB35982489e90A466dA0DD5dB"], // OptionPricingV2
-          startBlock: 1, // Set to earliest block
+          startBlock: 25148365, // Use deployment block
         },
       },
     },
@@ -108,7 +108,7 @@ export default createConfig({
       network: {
         monad: {
           address: ["0xFB75d6F7B0F0791ceb19106aCaB593651Db7564a"], // DopexV2ClammFeeStrategyV2
-          startBlock: 1, // Set to earliest block
+          startBlock: 25148365, // Use deployment block
         },
       },
     },
