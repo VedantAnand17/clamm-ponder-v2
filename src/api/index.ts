@@ -18,7 +18,7 @@ app.get("/hello", (c) => {
   return c.json({ message: "Hello, World!" });
 });
 
-app.get("/health", async (c) => {
+app.get("/status", async (c) => {
   try {
     // Check if database is accessible
     const marketCount = await db
