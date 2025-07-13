@@ -638,10 +638,9 @@ ponder.on("feeStrategy:FeeUpdate", async ({ event, context }) => {
       feeStrategy: event.log.address,
       currentFee: event.args.feePercentages,
     })
-    .onConflictDoUpdate({
-      target: [feeStrategyToOptionMarkets.chainId, feeStrategyToOptionMarkets.optionMarket, feeStrategyToOptionMarkets.feeStrategy],
-      set: { currentFee: event.args.feePercentages }
-    });
+    .onConflictDoUpdate((row) => ({
+      currentFee: event.args.feePercentages
+    }));
 });
 
 ponder.on("OptionMarket:LogSettleOption", async ({ event, context }) => {
