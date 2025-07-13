@@ -441,14 +441,7 @@ export const erc721_token_relations = relations(erc721_token, ({ one }) => ({
 export const erc721_token_to_internal_options = relations(
   erc721_token,
   ({ many }) => ({
-    internal_options: many(internal_options, {
-      references: [
-        internal_options.tokenId,
-        internal_options.optionMarket,
-        internal_options.chainId,
-      ],
-      fields: [erc721_token.id, erc721_token.market, erc721_token.chainId],
-    }),
+    internal_options: many(internal_options),
   })
 );
 
@@ -456,14 +449,7 @@ export const erc721_token_to_internal_options = relations(
 export const internal_options_to_token = relations(
   internal_options,
   ({ one }) => ({
-    token: one(erc721_token, {
-      references: [erc721_token.id, erc721_token.market, erc721_token.chainId],
-      fields: [
-        internal_options.tokenId,
-        internal_options.optionMarket,
-        internal_options.chainId,
-      ],
-    }),
+    token: one(erc721_token),
   })
 );
 

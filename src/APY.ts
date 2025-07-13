@@ -3,7 +3,6 @@ import { db } from "ponder:api";
 import schema, {
   automatorAPY,
   automatorAssets,
-  poolTVLandOpenInterest,
   user_liquidity_position,
 } from "ponder:schema";
 import { Automatorv11ABI } from "../abis/Automatorv11ABI";
