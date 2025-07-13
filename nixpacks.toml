@@ -1,11 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "pnpm"]
+nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["pnpm install --frozen-lockfile"]
+cmds = ["npm ci --only=production"]
 
 [phases.build]
-cmds = ["pnpm run typecheck"]
+cmds = ["npm run typecheck"]
 
 [start]
 cmd = "npm start" 

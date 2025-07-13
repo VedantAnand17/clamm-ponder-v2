@@ -14,7 +14,7 @@ A Ponder application for indexing CLAMM (Concentrated Liquidity Automated Market
 ### Prerequisites
 
 - Node.js 18.14 or higher
-- pnpm (recommended) or npm
+- npm (for deployment) or pnpm (for development)
 
 ### Setup
 
@@ -26,7 +26,11 @@ cd clamm-ponder-v2
 
 2. Install dependencies:
 ```bash
+# For development (recommended)
 pnpm install
+
+# For deployment
+npm install
 ```
 
 3. Create environment file:

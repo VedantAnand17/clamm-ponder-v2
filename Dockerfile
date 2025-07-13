@@ -1,22 +1,19 @@
 FROM node:20-alpine
 
-# Install pnpm
-RUN npm install -g pnpm
-
 # Set working directory
 WORKDIR /app
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN npm ci --only=production
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN pnpm run typecheck
+RUN npm run typecheck
 
 # Expose port
 EXPOSE 42069

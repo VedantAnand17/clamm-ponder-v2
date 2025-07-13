@@ -10,4 +10,5 @@ README.md
 Dockerfile
 .dockerignore
 railway.toml
-nixpacks.toml 
+nixpacks.toml
+pnpm-lock.yaml 
