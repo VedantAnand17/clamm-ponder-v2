@@ -1378,4 +1378,106 @@ app.get("/get-ivs", async (c) => {
   }
 });
 
+app.get("/sync-status", async (c) => {
+  try {
+    // Get the latest event timestamps from various event tables
+    const [
+      latestMintEvent,
+      latestTransferEvent,
+      latestSettleEvent,
+      latestExerciseEvent,
+      latestMarketInitEvent
+    ] = await Promise.all([
+      db
+        .select({ timestamp: schema.mintOptionEvent.timestamp })
+        .from(schema.mintOptionEvent)
+        .orderBy(desc(schema.mintOptionEvent.timestamp))
+        .limit(1),
+      db
+        .select({ timestamp: schema.erc721TransferEvent.timestamp })
+        .from(schema.erc721TransferEvent)
+        .orderBy(desc(schema.erc721TransferEvent.timestamp))
+        .limit(1),
+      db
+        .select({ timestamp: schema.settleOptionEvent.timestamp })
+        .from(schema.settleOptionEvent)
+        .orderBy(desc(schema.settleOptionEvent.timestamp))
+        .limit(1),
+      db
+        .select({ timestamp: schema.exerciseOptionEvent.timestamp })
+        .from(schema.exerciseOptionEvent)
+        .orderBy(desc(schema.exerciseOptionEvent.timestamp))
+        .limit(1),
+      db
+        .select({ timestamp: schema.option_markets.createdAt })
+        .from(schema.option_markets)
+        .orderBy(desc(schema.option_markets.createdAt))
+        .limit(1)
+    ]);
+
+    // Get the latest timestamp from all events
+    const allTimestamps = [
+      latestMintEvent[0]?.timestamp,
+      latestTransferEvent[0]?.timestamp,
+      latestSettleEvent[0]?.timestamp,
+      latestExerciseEvent[0]?.timestamp,
+      latestMarketInitEvent[0]?.timestamp
+    ].filter(timestamp => timestamp !== null && timestamp !== undefined);
+
+    const latestTimestamp = allTimestamps.length > 0 ? Math.max(...allTimestamps) : null;
+
+    // Get current time
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    // Calculate sync lag (difference between current time and latest event)
+    const syncLag = latestTimestamp ? currentTime - latestTimestamp : null;
+
+    // Get counts of indexed data
+    const [
+      marketsCount,
+      tokensCount,
+      eventsCount
+    ] = await Promise.all([
+      db.select({ count: schema.option_markets.address }).from(schema.option_markets),
+      db.select({ count: schema.erc721_token.id }).from(schema.erc721_token),
+      db.select({ count: schema.mintOptionEvent.id }).from(schema.mintOptionEvent)
+    ]);
+
+    return c.json({
+      status: "sync_status",
+      timestamp: new Date().toISOString(),
+      latestEventTimestamp: latestTimestamp,
+      currentTimestamp: currentTime,
+      syncLagSeconds: syncLag,
+      syncLagMinutes: syncLag ? Math.floor(syncLag / 60) : null,
+      syncLagHours: syncLag ? Math.floor(syncLag / 3600) : null,
+      indexedData: {
+        markets: marketsCount.length,
+        tokens: tokensCount.length,
+        events: eventsCount.length
+      },
+      latestEvents: {
+        mintEvent: latestMintEvent[0]?.timestamp || null,
+        transferEvent: latestTransferEvent[0]?.timestamp || null,
+        settleEvent: latestSettleEvent[0]?.timestamp || null,
+        exerciseEvent: latestExerciseEvent[0]?.timestamp || null,
+        marketInitEvent: latestMarketInitEvent[0]?.timestamp || null
+      },
+      syncStatus: latestTimestamp ? "syncing" : "not_started",
+      message: latestTimestamp 
+        ? `Latest event at timestamp ${latestTimestamp} (${new Date(latestTimestamp * 1000).toISOString()})`
+        : "No events indexed yet"
+    });
+  } catch (error) {
+    console.error("Error in sync-status endpoint:", error);
+    return c.json(
+      {
+        error: "Failed to fetch sync status",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500
+    );
+  }
+});
+
 export default app;
