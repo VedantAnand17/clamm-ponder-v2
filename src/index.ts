@@ -631,12 +631,17 @@ ponder.on("feeStrategy:FeeUpdate", async ({ event, context }) => {
   const chainId = Number(context.network.chainId);
 
   await context.db
-    .update(feeStrategyToOptionMarkets, {
+    .insert(feeStrategyToOptionMarkets)
+    .values({
       chainId,
       optionMarket: event.args.optionMarket,
       feeStrategy: event.log.address,
+      currentFee: event.args.feePercentages,
     })
-    .set({ currentFee: event.args.feePercentages });
+    .onConflictDoUpdate({
+      target: [feeStrategyToOptionMarkets.chainId, feeStrategyToOptionMarkets.optionMarket, feeStrategyToOptionMarkets.feeStrategy],
+      set: { currentFee: event.args.feePercentages }
+    });
 });
 
 ponder.on("OptionMarket:LogSettleOption", async ({ event, context }) => {
