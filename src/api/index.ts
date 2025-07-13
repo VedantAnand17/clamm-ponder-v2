@@ -42,6 +42,266 @@ app.get("/health", async (c) => {
   }
 });
 
+app.get("/indexing-status", async (c) => {
+  try {
+    // Get counts of various indexed entities
+    const [
+      marketsCount,
+      tokensCount,
+      internalOptionsCount,
+      traderAccountsCount,
+      mintEventsCount,
+      transferEventsCount,
+      settleEventsCount,
+      exerciseEventsCount
+    ] = await Promise.all([
+      db.select({ count: schema.option_markets.address }).from(schema.option_markets),
+      db.select({ count: schema.erc721_token.id }).from(schema.erc721_token),
+      db.select({ count: schema.internal_options.tokenId }).from(schema.internal_options),
+      db.select({ count: schema.trader_account.address }).from(schema.trader_account),
+      db.select({ count: schema.mintOptionEvent.id }).from(schema.mintOptionEvent),
+      db.select({ count: schema.erc721TransferEvent.id }).from(schema.erc721TransferEvent),
+      db.select({ count: schema.settleOptionEvent.id }).from(schema.settleOptionEvent),
+      db.select({ count: schema.exerciseOptionEvent.id }).from(schema.exerciseOptionEvent)
+    ]);
+
+    // Get latest events to understand recent activity
+    const latestMintEvent = await db
+      .select({
+        timestamp: schema.mintOptionEvent.timestamp,
+        market: schema.mintOptionEvent.market,
+        optionId: schema.mintOptionEvent.optionId
+      })
+      .from(schema.mintOptionEvent)
+      .orderBy(desc(schema.mintOptionEvent.timestamp))
+      .limit(1);
+
+    const latestTransferEvent = await db
+      .select({
+        timestamp: schema.erc721TransferEvent.timestamp,
+        from: schema.erc721TransferEvent.from,
+        to: schema.erc721TransferEvent.to
+      })
+      .from(schema.erc721TransferEvent)
+      .orderBy(desc(schema.erc721TransferEvent.timestamp))
+      .limit(1);
+
+    return c.json({
+      status: "indexing_status",
+      timestamp: new Date().toISOString(),
+      counts: {
+        markets: marketsCount.length,
+        tokens: tokensCount.length,
+        internalOptions: internalOptionsCount.length,
+        traderAccounts: traderAccountsCount.length,
+        mintEvents: mintEventsCount.length,
+        transferEvents: transferEventsCount.length,
+        settleEvents: settleEventsCount.length,
+        exerciseEvents: exerciseEventsCount.length
+      },
+      latestActivity: {
+        latestMintEvent: latestMintEvent[0] || null,
+        latestTransferEvent: latestTransferEvent[0] || null
+      },
+      message: "Use /indexing-details for more detailed information"
+    });
+  } catch (error) {
+    console.error("Error in indexing-status endpoint:", error);
+    return c.json(
+      {
+        error: "Failed to fetch indexing status",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500
+    );
+  }
+});
+
+app.get("/indexing-details", async (c) => {
+  try {
+    // Get detailed breakdown by chain and market
+    const marketsByChain = await db
+      .select({
+        chainId: schema.option_markets.chainId,
+        address: schema.option_markets.address,
+        name: schema.option_markets.name,
+        symbol: schema.option_markets.symbol
+      })
+      .from(schema.option_markets)
+      .orderBy(schema.option_markets.chainId);
+
+    // Get token counts by market
+    const tokensByMarket = await db
+      .select({
+        market: schema.erc721_token.market,
+        chainId: schema.erc721_token.chainId,
+        tokenCount: schema.erc721_token.id
+      })
+      .from(schema.erc721_token)
+      .groupBy(schema.erc721_token.market, schema.erc721_token.chainId);
+
+    // Get recent events (last 10)
+    const recentMintEvents = await db
+      .select({
+        timestamp: schema.mintOptionEvent.timestamp,
+        market: schema.mintOptionEvent.market,
+        optionId: schema.mintOptionEvent.optionId,
+        user: schema.mintOptionEvent.user,
+        isCall: schema.mintOptionEvent.isCall
+      })
+      .from(schema.mintOptionEvent)
+      .orderBy(desc(schema.mintOptionEvent.timestamp))
+      .limit(10);
+
+    // Get events by date (last 7 days)
+    const sevenDaysAgo = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
+    
+    const recentEventsByDate = await db
+      .select({
+        date: schema.mintOptionEvent.timestamp,
+        count: schema.mintOptionEvent.id
+      })
+      .from(schema.mintOptionEvent)
+      .where(gt(schema.mintOptionEvent.timestamp, sevenDaysAgo))
+      .groupBy(schema.mintOptionEvent.timestamp);
+
+    return c.json({
+      status: "detailed_indexing_status",
+      timestamp: new Date().toISOString(),
+      markets: {
+        total: marketsByChain.length,
+        byChain: marketsByChain
+      },
+      tokens: {
+        total: tokensByMarket.length,
+        byMarket: tokensByMarket
+      },
+      recentActivity: {
+        recentMintEvents,
+        eventsLast7Days: recentEventsByDate.length
+      },
+      indexingProgress: {
+        marketsIndexed: marketsByChain.length > 0 ? "Yes" : "No",
+        tokensIndexed: tokensByMarket.length > 0 ? "Yes" : "No",
+        eventsIndexed: recentMintEvents.length > 0 ? "Yes" : "No"
+      }
+    });
+  } catch (error) {
+    console.error("Error in indexing-details endpoint:", error);
+    return c.json(
+      {
+        error: "Failed to fetch detailed indexing information",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500
+    );
+  }
+});
+
+app.get("/market-status/:address", async (c) => {
+  const marketAddress = c.req.param("address");
+
+  if (!marketAddress) {
+    return c.json({ error: "Market address is required" }, 400);
+  }
+
+  try {
+    // Validate the market address format
+    const formattedMarketAddress = getAddress(marketAddress);
+
+    // Check if market is indexed
+    const marketData = await db
+      .select({
+        address: schema.option_markets.address,
+        chainId: schema.option_markets.chainId,
+        name: schema.option_markets.name,
+        symbol: schema.option_markets.symbol,
+        primePool: schema.option_markets.primePool,
+        optionPricing: schema.option_markets.optionPricing,
+        dpFee: schema.option_markets.dpFee,
+        callAsset: schema.option_markets.callAsset,
+        putAsset: schema.option_markets.putAsset,
+      })
+      .from(schema.option_markets)
+      .where(
+        eq(
+          schema.option_markets.address,
+          formattedMarketAddress as `0x${string}`
+        )
+      )
+      .limit(1);
+
+    // Get token count for this market
+    const tokenCount = await db
+      .select({ count: schema.erc721_token.id })
+      .from(schema.erc721_token)
+      .where(
+        eq(
+          schema.erc721_token.market,
+          formattedMarketAddress as `0x${string}`
+        )
+      );
+
+    // Get recent events for this market
+    const recentEvents = await db
+      .select({
+        timestamp: schema.mintOptionEvent.timestamp,
+        optionId: schema.mintOptionEvent.optionId,
+        user: schema.mintOptionEvent.user,
+        isCall: schema.mintOptionEvent.isCall
+      })
+      .from(schema.mintOptionEvent)
+      .where(
+        eq(
+          schema.mintOptionEvent.market,
+          formattedMarketAddress as `0x${string}`
+        )
+      )
+      .orderBy(desc(schema.mintOptionEvent.timestamp))
+      .limit(5);
+
+    // Get latest event timestamp
+    const latestEvent = await db
+      .select({
+        timestamp: schema.mintOptionEvent.timestamp
+      })
+      .from(schema.mintOptionEvent)
+      .where(
+        eq(
+          schema.mintOptionEvent.market,
+          formattedMarketAddress as `0x${string}`
+        )
+      )
+      .orderBy(desc(schema.mintOptionEvent.timestamp))
+      .limit(1);
+
+    return c.json({
+      marketAddress: formattedMarketAddress,
+      indexed: marketData.length > 0,
+      marketData: marketData[0] || null,
+      statistics: {
+        totalTokens: tokenCount.length,
+        totalEvents: recentEvents.length,
+        latestEventTimestamp: latestEvent[0]?.timestamp || null
+      },
+      recentActivity: recentEvents,
+      status: marketData.length > 0 ? "Indexed" : "Not Indexed",
+      message: marketData.length > 0 
+        ? "Market is indexed and available for queries" 
+        : "Market is not indexed. Check if it's configured in ponder.config.ts"
+    });
+  } catch (error) {
+    console.error("Error in market-status endpoint:", error);
+    return c.json(
+      {
+        error: "Failed to fetch market status",
+        message: error instanceof Error ? error.message : String(error),
+      },
+      500
+    );
+  }
+});
+
 app.get("/expiring-options/:minutes?", async (c) => {
   const minutes =
     c.req.param("minutes") === undefined
