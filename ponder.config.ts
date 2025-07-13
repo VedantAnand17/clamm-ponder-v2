@@ -56,7 +56,10 @@ export default createConfig({
     OptionMarket: {
       network: {
         monad: {
-          address: ["0x8fCc18a604C85475BE9DF68d6C106a1ca26A73cc"], // DopexV2OptionMarketV2
+          address: [
+            "0x8fCc18a604C85475BE9DF68d6C106a1ca26A73cc", // DopexV2OptionMarketV2
+            "0x1D56d9d8885988cAA4481B4432f9EA1FE29CAEcD"  // Additional OptionMarket
+          ],
           startBlock: 1, // Set to earliest block
         },
       },

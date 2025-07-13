@@ -18,6 +18,30 @@ app.get("/hello", (c) => {
   return c.json({ message: "Hello, World!" });
 });
 
+app.get("/health", async (c) => {
+  try {
+    // Check if database is accessible
+    const marketCount = await db
+      .select({ count: schema.option_markets.address })
+      .from(schema.option_markets)
+      .limit(1);
+    
+    return c.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      database: "connected",
+      indexedMarkets: marketCount.length > 0 ? "available" : "none"
+    });
+  } catch (error) {
+    return c.json({ 
+      status: "unhealthy", 
+      timestamp: new Date().toISOString(),
+      database: "error",
+      error: error instanceof Error ? error.message : String(error)
+    }, 500);
+  }
+});
+
 app.get("/expiring-options/:minutes?", async (c) => {
   const minutes =
     c.req.param("minutes") === undefined
@@ -531,7 +555,11 @@ app.get("/get-markets", async (c) => {
       })
       .from(schema.option_markets);
 
-    return c.json({ markets });
+    return c.json({ 
+      markets,
+      totalCount: markets.length,
+      message: "Use /get-market/:address to get details for a specific market"
+    });
   } catch (error) {
     console.error("Error in get-markets endpoint:", error);
     return c.json(
@@ -578,7 +606,22 @@ app.get("/get-market/:address", async (c) => {
       .limit(1);
 
     if (market.length === 0) {
-      return c.json({ error: "Option market not found" }, 404);
+      // Get all available markets for debugging
+      const allMarkets = await db
+        .select({
+          address: schema.option_markets.address,
+          chainId: schema.option_markets.chainId,
+          name: schema.option_markets.name,
+        })
+        .from(schema.option_markets)
+        .limit(10);
+
+      return c.json({ 
+        error: "Option market not found", 
+        requestedAddress: formattedMarketAddress,
+        availableMarkets: allMarkets,
+        message: "The requested market address is not indexed. Check if it's configured in ponder.config.ts"
+      }, 404);
     }
 
     // Get the optionPricing data for this market
