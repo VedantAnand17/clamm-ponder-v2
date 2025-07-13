@@ -1385,8 +1385,7 @@ app.get("/sync-status", async (c) => {
       latestMintEvent,
       latestTransferEvent,
       latestSettleEvent,
-      latestExerciseEvent,
-      latestMarketInitEvent
+      latestExerciseEvent
     ] = await Promise.all([
       db
         .select({ timestamp: schema.mintOptionEvent.timestamp })
@@ -1407,11 +1406,6 @@ app.get("/sync-status", async (c) => {
         .select({ timestamp: schema.exerciseOptionEvent.timestamp })
         .from(schema.exerciseOptionEvent)
         .orderBy(desc(schema.exerciseOptionEvent.timestamp))
-        .limit(1),
-      db
-        .select({ timestamp: schema.option_markets.createdAt })
-        .from(schema.option_markets)
-        .orderBy(desc(schema.option_markets.createdAt))
         .limit(1)
     ]);
 
@@ -1420,8 +1414,7 @@ app.get("/sync-status", async (c) => {
       latestMintEvent[0]?.timestamp,
       latestTransferEvent[0]?.timestamp,
       latestSettleEvent[0]?.timestamp,
-      latestExerciseEvent[0]?.timestamp,
-      latestMarketInitEvent[0]?.timestamp
+      latestExerciseEvent[0]?.timestamp
     ].filter(timestamp => timestamp !== null && timestamp !== undefined);
 
     const latestTimestamp = allTimestamps.length > 0 ? Math.max(...allTimestamps) : null;
@@ -1460,8 +1453,7 @@ app.get("/sync-status", async (c) => {
         mintEvent: latestMintEvent[0]?.timestamp || null,
         transferEvent: latestTransferEvent[0]?.timestamp || null,
         settleEvent: latestSettleEvent[0]?.timestamp || null,
-        exerciseEvent: latestExerciseEvent[0]?.timestamp || null,
-        marketInitEvent: latestMarketInitEvent[0]?.timestamp || null
+        exerciseEvent: latestExerciseEvent[0]?.timestamp || null
       },
       syncStatus: latestTimestamp ? "syncing" : "not_started",
       message: latestTimestamp 
