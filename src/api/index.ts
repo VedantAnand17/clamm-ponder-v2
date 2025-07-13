@@ -135,7 +135,7 @@ app.get("/indexing-details", async (c) => {
       .select({
         market: schema.erc721_token.market,
         chainId: schema.erc721_token.chainId,
-        tokenCount: schema.erc721_token.id
+        tokenCount: db.fn.count(schema.erc721_token.id)
       })
       .from(schema.erc721_token)
       .groupBy(schema.erc721_token.market, schema.erc721_token.chainId);
